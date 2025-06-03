@@ -2,6 +2,7 @@ import flet as ft
 from logic import memory_card
 from audio import SoundManager
 import asyncio
+from flet import AnimatedSwitcher, Animation
 
 async def main(page: ft.Page):
     page.title = "Juego de Memoria"
@@ -10,7 +11,7 @@ async def main(page: ft.Page):
     page.bgcolor = "#1e1e1e"
     page.padding = 20
 
-    #Volver a la pantalla de inicio
+    # Volver a la pantalla de inicio
     def volver_a_inicio(e=None):
         page.views.clear()
         page.views.append(vista_inicio)
@@ -19,9 +20,24 @@ async def main(page: ft.Page):
     # ------------------------------
     # FUNCION PARA INICIAR EL JUEGO
     # ------------------------------
-    def ir_a_juego(e):
-        #assets = ["🍎", "🍌", "🍇", "🍉", "🍍", "🥝", "🍓", "🍑", "🍒", "🍈", "🥥", "🍏"]
-        assets = ["assets/cards/A.jpg","assets/cards/B.jpg","assets/cards/C.jpg","assets/cards/D.jpg","assets/cards/E.jpg","assets/cards/F.jpg","assets/cards/G.gif","assets/cards/H.gif","assets/cards/I.jpg","assets/cards/J.gif","assets/cards/K.jpg","assets/cards/L.jpg","assets/cards/M.jpg","assets/cards/N.jpg"]
+    def ir_a_juego(nivel):
+        if nivel == "nivel1":
+            assets = [
+                "assets/cards/A.jpg","assets/cards/B.jpg","assets/cards/C.jpg","assets/cards/D.jpg",
+                "assets/cards/E.jpg","assets/cards/F.jpg","assets/cards/G.gif","assets/cards/H.gif",
+                "assets/cards/I.jpg","assets/cards/J.gif","assets/cards/K.jpg","assets/cards/L.jpg",
+                "assets/cards/M.jpg","assets/cards/N.jpg"
+            ]
+        elif nivel == "nivel2":
+            assets = [
+                "assets/cards/O.jpg","assets/cards/P.jpg","assets/cards/Q.jpg","assets/cards/R.jpg",
+                "assets/cards/RR.gif","assets/cards/S.gif","assets/cards/T.jpg","assets/cards/U.jpg",
+                "assets/cards/V.jpg","assets/cards/W.jpg","assets/cards/X.jpg","assets/cards/Y.jpg",
+                "assets/cards/Z.gif","assets/cards/Ñ.gif"
+            ]
+        else:
+            assets = []
+
         game = memory_card(assets)
         sound = SoundManager()
         sonido_activo = True
@@ -36,24 +52,28 @@ async def main(page: ft.Page):
                 else:
                     contenido = ft.Text("❓", size=30)
 
-
                 async def manejar_click(e, i=i):
-                  await click_carta(i)
+                    await click_carta(i)
 
                 btn = ft.ElevatedButton(
-                    content=contenido,
+                    content=AnimatedSwitcher(
+                        content=contenido,
+                        transition=Animation(duration=300, curve="easeInOut"),
+                        switch_in_curve="easeInOut",
+                        switch_out_curve="easeInOut"
+                    ),
                     width=90,
                     height=90,
                     disabled=card.matched,
                     on_click=manejar_click,
                     style=ft.ButtonStyle(
-                      bgcolor="#446DFF",
-                      color=ft.Colors.WHITE,
-                      shape=ft.RoundedRectangleBorder(radius=12),
-                      shadow_color="rgba(0,0,0,0.4)",
-                      elevation=4,
-                      overlay_color="rgba(255,255,255,0.1)",
-                      animation_duration=300,
+                        bgcolor="#446DFF",
+                        color=ft.Colors.WHITE,
+                        shape=ft.RoundedRectangleBorder(radius=12),
+                        shadow_color="rgba(0,0,0,0.4)",
+                        elevation=4,
+                        overlay_color="rgba(255,255,255,0.1)",
+                        animation_duration=300,
                     )
                 )
                 botones.append(btn)
@@ -80,101 +100,131 @@ async def main(page: ft.Page):
                 if matched:
                     print("✅ Pareja encontrada")
                     if sonido_activo:
-                      sound.play_success()
+                        sound.play_success()
                 else:
                     print("❌ No coinciden")
                     if sonido_activo:
-                      sound.play_fail()
+                        sound.play_fail()
 
             # Verifica si ya se ganó el juego
             if game.is_finished():
                 titulo.value = "¡Ganaste! 🎉"
                 if sonido_activo:
-                  sound.play_victory()
+                    sound.play_victory()
 
             tablero.controls = actualizar_tablero()
             page.update()
 
         tablero = ft.Row(
-          controls=actualizar_tablero(),
-          wrap=True,
-          alignment=ft.MainAxisAlignment.CENTER,
-          width=12 * 70,  # 6 columnas de 60px + 10px de espacio aprox
-          spacing=30
-          )
+            controls=actualizar_tablero(),
+            wrap=True,
+            alignment=ft.MainAxisAlignment.CENTER,
+            width=9 * 100,  # 7 columnas aprox (ajustable)
+            spacing=30
+        )
 
         salir_btn = ft.TextButton(
-          "Salir",
-          on_click=volver_a_inicio,
-          style=ft.ButtonStyle(
-          color="white"
+            "Salir",
+            on_click=volver_a_inicio,
+            style=ft.ButtonStyle(
+                color="white"
             )
-          )
-        
+        )
+
         icono_sonido = ft.IconButton(
-        icon=ft.Icons.VOLUME_UP,
-        icon_size=30,
-        tooltip="Desactivar sonido",
-        on_click=lambda e: toggle_sonido()
-          )
+            icon=ft.Icons.VOLUME_UP,
+            icon_size=30,
+            tooltip="Desactivar sonido",
+            on_click=lambda e: toggle_sonido()
+        )
 
         def toggle_sonido():
-          nonlocal sonido_activo
-          sonido_activo = not sonido_activo
+            nonlocal sonido_activo
+            sonido_activo = not sonido_activo
 
-          if sonido_activo:
-            icono_sonido.icon = ft.Icons.VOLUME_UP
-            icono_sonido.tooltip = "Desactivar sonido"
-          else:
-            icono_sonido.icon = ft.Icons.VOLUME_OFF
-            icono_sonido.tooltip = "Activar sonido"
+            if sonido_activo:
+                icono_sonido.icon = ft.Icons.VOLUME_UP
+                icono_sonido.tooltip = "Desactivar sonido"
+            else:
+                icono_sonido.icon = ft.Icons.VOLUME_OFF
+                icono_sonido.tooltip = "Activar sonido"
 
-          page.update()
-
-        controles_superiores =ft.Container(
-            content=ft.Row(
-              controls=[icono_sonido, salir_btn],
-              alignment=ft.MainAxisAlignment.END,
-              spacing=10
-            ),
-          alignment=ft.alignment.top_right,
-          padding=10
-        )
+            page.update()
 
         vista_juego = ft.View(
-    "/juego",
-    controls=[
-        ft.Column(
+            "/juego",
             controls=[
-                # Fila con botones arriba, alineados a la derecha
-                ft.Row(
-                    controls=[icono_sonido, salir_btn],
-                    alignment=ft.MainAxisAlignment.END,
-                    spacing=10,
-                ),
-                ft.Container(height=20),  # Espacio para separar botones del contenido
-                # Contenido principal: título y tablero
                 ft.Column(
                     controls=[
-                        titulo,
-                        ft.Container(height=30),
-                        tablero
+                        ft.Row(
+                            controls=[icono_sonido, salir_btn],
+                            alignment=ft.MainAxisAlignment.END,
+                            spacing=10,
+                        ),
+                        ft.Container(height=20),
+                        ft.Column(
+                            controls=[
+                                titulo,
+                                ft.Container(height=30),
+                                tablero
+                            ],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            alignment=ft.MainAxisAlignment.START,
+                        )
                     ],
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     alignment=ft.MainAxisAlignment.START,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    expand=True,
                 )
             ],
-            alignment=ft.MainAxisAlignment.START,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            expand=True,
+            vertical_alignment=ft.MainAxisAlignment.START,
         )
-    ],
-    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-    vertical_alignment=ft.MainAxisAlignment.START,
-)
 
         page.views.append(vista_juego)
         page.go("/juego")
+
+    # ------------------------------
+    # FUNCION PARA PANTALLA DE NIVELES
+    # ------------------------------
+    def ir_a_niveles(e):
+        nivel1_btn = ft.ElevatedButton(
+            text="Nivel 1 (A - N)",
+            width=300,
+            on_click=lambda e: ir_a_juego("nivel1")
+        )
+
+        nivel2_btn = ft.ElevatedButton(
+            text="Nivel 2 (O - Z)",
+            width=300,
+            on_click=lambda e: ir_a_juego("nivel2")
+        )
+
+        volver_btn = ft.TextButton("Volver", on_click=volver_a_inicio, style=ft.ButtonStyle(color="white"))
+
+        vista_niveles = ft.View(
+            "/niveles",
+            controls=[
+                ft.Column(
+                    [
+                        ft.Text("Selecciona un nivel", size=40, color="white", font_family="Bungee Inline"),
+                        ft.Container(height=30),
+                        nivel1_btn,
+                        ft.Container(height=10),
+                        nivel2_btn,
+                        ft.Container(height=30),
+                        volver_btn
+                    ],
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    alignment=ft.MainAxisAlignment.CENTER
+                )
+            ],
+            vertical_alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        )
+
+        page.views.append(vista_niveles)
+        page.go("/niveles")
 
     # ------------------------------
     # PANTALLA DE INICIO
@@ -203,7 +253,7 @@ async def main(page: ft.Page):
         controls=[ft.Container(expand=True), salir_btn],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN
     )
-    
+
     titulo = ft.Text(
         "Bienvenido",
         size=60,
@@ -212,14 +262,26 @@ async def main(page: ft.Page):
         color="white"
     )
 
-    boton1 = ft.ElevatedButton("Jugar", width=200, height=60, bgcolor="#446DFF", color=ft.Colors.WHITE,
-                               on_click=ir_a_juego,
-                               style=ft.ButtonStyle(text_style=ft.TextStyle(size=20, font_family="Bungee Inline")))
-    
-    boton2 = ft.ElevatedButton("Por supuesto", width=200, height=60, bgcolor="#446DFF", color=ft.Colors.WHITE,
-                               on_click=ir_a_juego,
-                               style=ft.ButtonStyle(text_style=ft.TextStyle(size=20, font_family="Bungee Inline")))
-    
+    boton1 = ft.ElevatedButton(
+        "Jugar",
+        width=200,
+        height=60,
+        bgcolor="#446DFF",
+        color=ft.Colors.WHITE,
+        on_click=lambda e: ir_a_juego("nivel1"),
+        style=ft.ButtonStyle(text_style=ft.TextStyle(size=20, font_family="Bungee Inline"))
+    )
+
+    boton2 = ft.ElevatedButton(
+        "Por supuesto",
+        width=200,
+        height=60,
+        bgcolor="#446DFF",
+        color=ft.Colors.WHITE,
+        on_click=ir_a_niveles,
+        style=ft.ButtonStyle(text_style=ft.TextStyle(size=20, font_family="Bungee Inline"))
+    )
+
     botones = ft.Row(
         controls=[boton1, boton2],
         spacing=20,
