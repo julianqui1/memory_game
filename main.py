@@ -10,6 +10,8 @@ async def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.bgcolor = "#1e1e1e"
     page.padding = 20
+    page.window.width = 1200  # Ancho deseado en píxeles
+    page.window.height = 800  # Alto deseado en píxeles
 
     # Volver a la pantalla de inicio
     def volver_a_inicio(e=None):
@@ -48,9 +50,18 @@ async def main(page: ft.Page):
             botones = []
             for i, card in enumerate(game.cards):
                 if card.revealed or card.matched:
-                    contenido = ft.Image(src=card.asset, width=140, height=140, fit=ft.ImageFit.CONTAIN)
+                    letra = card.asset.split("/")[-1][0]  # Extrae la letra del nombre del archivo
+                    contenido = ft.Column(
+                        controls=[
+                            ft.Image(src=card.asset, width=90, height=90, fit=ft.ImageFit.CONTAIN),
+                            ft.Text(letra, size=15, color="white", weight=ft.FontWeight.BOLD)
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                    )
                 else:
-                    contenido = ft.Text("❓", size=30)
+                    contenido = ft.Text("❓", size=30, color="white")
+
 
                 async def manejar_click(e, i=i):
                     await click_carta(i)
@@ -62,8 +73,8 @@ async def main(page: ft.Page):
                         switch_in_curve="easeInOut",
                         switch_out_curve="easeInOut"
                     ),
-                    width=90,
-                    height=90,
+                    width=120,
+                    height=120,
                     disabled=card.matched,
                     on_click=manejar_click,
                     style=ft.ButtonStyle(
@@ -119,7 +130,7 @@ async def main(page: ft.Page):
             controls=actualizar_tablero(),
             wrap=True,
             alignment=ft.MainAxisAlignment.CENTER,
-            width=9 * 100,  # 7 columnas aprox (ajustable)
+            width=11 * 100,  # 7 columnas aprox (ajustable)
             spacing=30
         )
 
@@ -191,37 +202,54 @@ async def main(page: ft.Page):
         nivel1_btn = ft.ElevatedButton(
             text="Nivel 1 (A - N)",
             width=300,
+            height=60,
+            bgcolor="#446DFF",
+            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(text_style=ft.TextStyle(size=20, font_family="Bungee Inline")),
             on_click=lambda e: ir_a_juego("nivel1")
         )
 
         nivel2_btn = ft.ElevatedButton(
             text="Nivel 2 (O - Z)",
             width=300,
+            height=60,
+            bgcolor="#446DFF",
+            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(text_style=ft.TextStyle(size=20, font_family="Bungee Inline")),
             on_click=lambda e: ir_a_juego("nivel2")
         )
 
-        volver_btn = ft.TextButton("Volver", on_click=volver_a_inicio, style=ft.ButtonStyle(color="white"))
-
+        volver_btn = ft.IconButton(icon=ft.Icons.ARROW_BACK,
+          icon_size=30,
+          tooltip="Volver",
+          on_click=volver_a_inicio,
+          style=ft.ButtonStyle(color=ft.Colors.WHITE )
+          )
+        
         vista_niveles = ft.View(
-            "/niveles",
-            controls=[
-                ft.Column(
-                    [
-                        ft.Text("Selecciona un nivel", size=40, color="white", font_family="Bungee Inline"),
-                        ft.Container(height=30),
-                        nivel1_btn,
-                        ft.Container(height=10),
-                        nivel2_btn,
-                        ft.Container(height=30),
-                        volver_btn
-                    ],
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    alignment=ft.MainAxisAlignment.CENTER
-                )
+    "/niveles",
+    controls=[
+        ft.Row(  # Botón "Volver" alineado a la derecha
+            controls=[ft.Container(expand=True), volver_btn],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+        ),
+        ft.Column(
+            [
+                ft.Text("Selecciona un nivel", size=40, color="white", font_family="Bungee Inline"),
+                ft.Container(height=30),
+                nivel1_btn,
+                ft.Container(height=10),
+                nivel2_btn
             ],
-            vertical_alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,
+            expand=True
         )
+    ],
+    vertical_alignment=ft.MainAxisAlignment.START,
+    horizontal_alignment=ft.CrossAxisAlignment.CENTER
+)
+
 
         page.views.append(vista_niveles)
         page.go("/niveles")
@@ -273,7 +301,7 @@ async def main(page: ft.Page):
     )
 
     boton2 = ft.ElevatedButton(
-        "Por supuesto",
+        "Niveles",
         width=200,
         height=60,
         bgcolor="#446DFF",
