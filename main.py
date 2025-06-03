@@ -3,6 +3,14 @@ from logic import memory_card
 from audio import SoundManager
 import asyncio
 from flet import AnimatedSwitcher, Animation
+import os
+import sys
+
+def ruta_recurso(rel_path):
+    """Devuelve la ruta absoluta del recurso, compatible con PyInstaller."""
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, rel_path)
+    return os.path.join(os.path.abspath("."), rel_path)
 
 async def main(page: ft.Page):
     page.title = "Juego de Memoria"
@@ -24,19 +32,11 @@ async def main(page: ft.Page):
     # ------------------------------
     def ir_a_juego(nivel):
         if nivel == "nivel1":
-            assets = [
-                "assets/cards/A.jpg","assets/cards/B.jpg","assets/cards/C.jpg","assets/cards/D.jpg",
-                "assets/cards/E.jpg","assets/cards/F.jpg","assets/cards/G.gif","assets/cards/H.gif",
-                "assets/cards/I.jpg","assets/cards/J.gif","assets/cards/K.jpg","assets/cards/L.jpg",
-                "assets/cards/M.jpg","assets/cards/N.jpg"
-            ]
+            assets = [ruta_recurso(f"assets/cards/{letra}.jpg") if letra not in ["G", "H", "J"] else ruta_recurso(f"assets/cards/{letra}.gif")
+                      for letra in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"]]
         elif nivel == "nivel2":
-            assets = [
-                "assets/cards/O.jpg","assets/cards/P.jpg","assets/cards/Q.jpg","assets/cards/R.jpg",
-                "assets/cards/RR.gif","assets/cards/S.gif","assets/cards/T.jpg","assets/cards/U.jpg",
-                "assets/cards/V.jpg","assets/cards/W.jpg","assets/cards/X.jpg","assets/cards/Y.jpg",
-                "assets/cards/Z.gif","assets/cards/Ñ.gif"
-            ]
+            assets = [ruta_recurso(f"assets/cards/{letra}.jpg") if letra not in ["RR", "S", "Z", "Ñ"] else ruta_recurso(f"assets/cards/{letra}.gif")
+                      for letra in ["O", "P", "Q", "R", "RR", "S", "T", "U", "V", "W", "X", "Y", "Z", "Ñ"]]
         else:
             assets = []
 
@@ -340,4 +340,4 @@ async def main(page: ft.Page):
     page.views.append(vista_inicio)
     page.go("/")
 
-ft.app(target=main)
+ft.app(target=main,view=ft.AppView.FLET_APP)
